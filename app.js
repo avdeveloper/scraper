@@ -1,5 +1,5 @@
 var restify = require('restify'),
-    crepe   = require('crepejs'),
+    crepe   = require('crepe'),
     server  = restify.createServer();
 
 // Setup middleware
@@ -12,14 +12,21 @@ server.use(restify.bodyParser());
  * @return (JSON) An object whose keys are the same as the request object but the values are now the text inside the selected DOM elements if found
  */
 server.post('/', function (req, res, next) {
-  var scraper = new crepe(req.params.url, req.params.elements);
-  scraper.scrape(function (errors, response) {
-    if (errors) return next(errors);
-    res.send(response);
+  crepe.scrape({
+    url: req.params.url,
+    items: req.params.elements,
+    error: function (errors) {
+      for (var error in errors)
+        console.error(errors[error]);
+    },
+    success: function (data) {
+      res.send(data);
+    }
   });
 });
 
 // Start listening for requests
-server.listen(8080, function() {
+var port = process.env.PORT || 8080;
+server.listen(port, function() {
   console.log("%s listening at %s", server.name, server.url);
 });
